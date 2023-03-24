@@ -13,14 +13,17 @@ on:
                 required: true
                 default: 19
                 type: number
-                description: "WASI-SDK version"
+                description: "WASI SDK version"
+
+permissions:
+  contents: write
 
 jobs:
-    build:
-        name: "Build CPython ${{ inputs.python_version }}"
+    release:
+        name: "Build CPython ${{ inputs.python_version }} using WASI SDK ${{ inputs.wasi_sdk_version }}"
         runs-on: ubuntu-latest
         steps:
-          - name: "Install WASI-SDK ${{ inputs.wasi_sdk_version }}"
+          - name: "Install WASI SDK ${{ inputs.wasi_sdk_version }}"
             run: |
               mkdir ${{ env.WASI_SDK_PATH }} && \
               curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ inputs.wasi_sdk_version }}/wasi-sdk-${{ inputs.wasi_sdk_version }}.0-linux.tar.gz | \
@@ -51,4 +54,40 @@ jobs:
               ref: "v${{ inputs.python_version }}"
           - name: "Build"
             run: python3 Tools/wasm/wasm_build.py wasi build
-
+          - name: "Strip stdlib"
+            # Based on preexisting practice; could probably strip out more.
+            run: |
+              pushd Lib
+              rm -rf curses/ ctypes/test/ ensurepip/ distutils/ \
+                lib2to3/ idlelib/ test/ multiprocessing/ \
+                tkinter/ turtledemo/ venv/ unittest/test/
+              popd
+              find -name __pycache__ | xargs rm -rf
+          - name: "Copy over _sysconfigdata_*.py"
+            run: cp builddir/wasi/build/lib.wasi-wasm32-*/_sysconfigdata_*.py Lib/
+          - name: "Zip file names"
+            run: |
+              ZIP_FILE_NAME = python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip
+              echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
+              echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
+          - name: "Create executable zip"
+            run: |
+              echo "ZIP_FILE_NAME=python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip" >> $GITHUB_ENV
+              pushd builddir/wasi
+              zip ${{ env.ZIP_FILE_NAME }} python.wasm
+              popd
+              zip --update -r builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} Lib/
+          - name: "Create build artifact zip"
+            run: |
+              pushd builddir/wasi
+              zip ${{ env.BUILD_ARTIFACTS_FILE_NAME }} \
+                config.log config.cache Makefile pyconfig.h libpython*.a \
+                Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
+                Modules/_decimal/libmpdec/libmpdec.a \
+                Modules/expat/libexpat.a \
+                Programs/python.o
+              popd
+          - name: "Create draft release"
+            run: |
+              gh release create v${{ inputs.python_version }} --title "CPython ${{ inputs.python_version}} w/ WASI SDK ${{ inputs.wasi_sdk_version}}" --draft
+              gh release upload v${{ inputs.python_version }} builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} builddir/wasi/${{ env.BUILD_ARTIFACTS_FILE_NAME }}
