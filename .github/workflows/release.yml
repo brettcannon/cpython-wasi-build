@@ -67,7 +67,7 @@ jobs:
             run: cp builddir/wasi/build/lib.wasi-wasm32-*/_sysconfigdata_*.py Lib/
           - name: "Zip file names"
             run: |
-              ZIP_FILE_NAME = python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip
+              export ZIP_FILE_NAME=python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip
               echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
               echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
           - name: "Create executable zip"
