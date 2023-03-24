@@ -27,9 +27,9 @@ jobs:
             run: |
               curl https://wasmtime.dev/install.sh -sSf | bash
               mkdir --parents $HOME/.local/bin
-              ln -s $HOME/.wasmtime/wasmtime $HOME/.local/bin/wasmtime
+              ln -s $HOME/.wasmtime/bin/wasmtime $HOME/.local/bin/
               echo $PATH
-              ls $HOME/.wasmtime
+              ls $HOME/.wasmtime/bin
               $HOME/.wasmtime/wasmtime --version
               wasmtime --version
           - name: "Install build dependencies"
