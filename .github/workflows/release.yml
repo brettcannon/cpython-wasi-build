@@ -30,7 +30,7 @@ jobs:
               ln -s $HOME/.wasmtime/bin/wasmtime $HOME/.local/bin/
               echo $PATH
               ls $HOME/.wasmtime/bin
-              $HOME/.wasmtime/wasmtime --version
+              $HOME/.wasmtime/bin/wasmtime --version
               wasmtime --version
           - name: "Install build dependencies"
             # https://devguide.python.org/getting-started/setup-building/#linux
