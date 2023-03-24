@@ -90,3 +90,5 @@ jobs:
             run: |
               gh release create v${{ inputs.python_version }} --title "CPython ${{ inputs.python_version}} w/ WASI SDK ${{ inputs.wasi_sdk_version}}" --draft
               gh release upload v${{ inputs.python_version }} builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} builddir/wasi/${{ env.BUILD_ARTIFACTS_FILE_NAME }}
+            env:
+              GH_TOKEN: ${{ github.token }}
