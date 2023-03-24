@@ -1,5 +1,9 @@
 name: "Create release"
 
+env:
+  WASI_SDK_VERSION: "19"
+  WASI_SDK_PATH: /opt/wasi-sdk
+
 on:
     workflow_dispatch:
         inputs:
@@ -11,26 +15,29 @@ jobs:
     build:
         name: "Build CPython ${{ inputs.python_version }}"
         runs-on: ubuntu-latest
-        container:
-            image: "ghcr.io/webassembly/wasi-sdk:wasi-sdk-19"
         steps:
-            - name: "Install build dependencies"
-              # https://devguide.python.org/getting-started/setup-building/#linux
-              # Removed: gdb lcov libffi-dev libncurses5-dev libreadline6-dev tk-dev
-              run: |
-                apt-get install build-essential pkg-config \
-                libbz2-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
-                libsqlite3-dev libssl-dev \
-                lzma lzma-dev uuid-dev zlib1g-dev
-            - name: "Checkout CPython"
-              uses: actions/checkout@v3
-              with:
-                repository: "python/cpython"
-                ref: "v${{ inputs.python_version }}"
-            - name: "Install CPython"
-              uses: actions/setup-python@v4
-              with:
-                python-version: "3.x"
-            - name: "Build"
-              run: python3 Tools/wasm/wasm_build.py wasi build
+          - name: "Install WASI-SDK ${{ env.WASK_SDK_VERSION }}"
+            run: |
+              mkdir ${{ env.WASI_SDK_PATH }} && \
+              curl --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ env.WASI_SDK_VERSION }}/wasi-sdk-${{ env.WASI_SDK_VERSION }}.0-linux.tar.gz | \
+              tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
+          - name: "Install build dependencies"
+            # https://devguide.python.org/getting-started/setup-building/#linux
+            # Removed: gdb lcov libffi-dev libncurses5-dev libreadline6-dev tk-dev
+            run: |
+              sudo apt-get install build-essential pkg-config \
+              libbz2-dev libgdbm-dev libgdbm-compat-dev liblzma-dev \
+              libsqlite3-dev libssl-dev \
+              lzma lzma-dev uuid-dev zlib1g-dev
+          - name: "Install Python"
+            uses: actions/setup-python@v4
+            with:
+              python-version: "3.x"
+          - name: "Checkout CPython"
+            uses: actions/checkout@v3
+            with:
+              repository: "python/cpython"
+              ref: "v${{ inputs.python_version }}"
+          - name: "Build"
+            run: python3 Tools/wasm/wasm_build.py wasi build
 
