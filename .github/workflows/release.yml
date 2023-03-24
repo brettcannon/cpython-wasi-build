@@ -72,9 +72,8 @@ jobs:
               echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
           - name: "Create executable zip"
             run: |
-              echo "ZIP_FILE_NAME=python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip" >> $GITHUB_ENV
               pushd builddir/wasi
-              zip ${{ env.ZIP_FILE_NAME }} python.wasm
+              zip ${{ env.EXECUTABLE_FILE_NAME }} python.wasm
               popd
               zip --update -r builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} Lib/
           - name: "Create build artifact zip"
