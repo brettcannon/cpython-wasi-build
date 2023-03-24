@@ -24,7 +24,7 @@ jobs:
           - name: "Install wasmtime"
             run: curl https://wasmtime.dev/install.sh -sSf | bash
           - name: "Put wasmtime on $PATH"
-            run: ln -s $HOME/.wasmtime/wasmtime /usr/local/bin
+            run: echo $PATH && echo $HOME && echo `ls $HOME/.wasmtime`
           - name: "Install build dependencies"
             # https://devguide.python.org/getting-started/setup-building/#linux
             # Removed: gdb lcov libffi-dev libncurses5-dev libreadline6-dev tk-dev
