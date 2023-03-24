@@ -23,9 +23,11 @@ jobs:
           #     tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
           - name: "Install wasmtime"
             run: curl https://wasmtime.dev/install.sh -sSf | bash
-          - name: "Put wasmtime on $PATH"
-            run: ln -s $HOME/.wasmtime/wasmtime $HOME/.local/bin
+          # - name: "Put wasmtime on $PATH"
+          #   run: ln -s $HOME/.wasmtime/wasmtime $HOME/.local/bin
+          - run: ls $HOME/.wasmtime
           - run: ls $HOME/.local/bin
+          - run: echo $PATH
           - run: which wasmtime
           # - name: "Install build dependencies"
           #   # https://devguide.python.org/getting-started/setup-building/#linux
