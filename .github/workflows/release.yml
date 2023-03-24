@@ -27,7 +27,10 @@ jobs:
             run: |
               curl https://wasmtime.dev/install.sh -sSf | bash
               mkdir --parents $HOME/.local/bin
-              ln -s $HOME/.wasmtime/wasmtime $HOME/.local/bin
+              ln -s $HOME/.wasmtime/wasmtime $HOME/.local/bin/wasmtime
+              echo $PATH
+              ls $HOME/.wasmtime
+              $HOME/.wasmtime/wasmtime --version
               wasmtime --version
           - name: "Install build dependencies"
             # https://devguide.python.org/getting-started/setup-building/#linux
