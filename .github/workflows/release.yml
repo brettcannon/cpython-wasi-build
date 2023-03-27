@@ -54,28 +54,37 @@ jobs:
               ref: "v${{ inputs.python_version }}"
           - name: "Build"
             run: python3 Tools/wasm/wasm_build.py wasi build
+          - name: "Create lib directory"
+            run: |
+              export PYTHON_BIN_NAME=`builddir/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"
+              export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
+              mkdir --parents $ZIP_LIB_DIR
+              echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
+          - name: "Copy python.wasm"
+            run: cp builddir/wasi/python.wasm zip-file
+          - name: "Copy stdlib"
+            run: cp -r Lib/* ${{ env.ZIP_LIB_DIR }}
           - name: "Strip stdlib"
             # Based on preexisting practice; could probably strip out more.
             run: |
-              pushd Lib
+              pushd ${{ env.ZIP_LIB_DIR }}
               rm -rf curses/ ctypes/test/ ensurepip/ distutils/ \
                 lib2to3/ idlelib/ test/ multiprocessing/ \
                 tkinter/ turtledemo/ venv/ unittest/test/
-              popd
               find -name __pycache__ | xargs rm -rf
+              popd
           - name: "Copy over _sysconfigdata_*.py"
-            run: cp builddir/wasi/build/lib.wasi-wasm32-*/_sysconfigdata_*.py Lib/
-          - name: "Zip file names"
+            run: cp builddir/wasi/build/lib.wasi-wasm32-*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
+          - name: "Calculate zip file names"
             run: |
               export ZIP_FILE_NAME=python-${{ inputs.python_version }}-wasi_sdk-${{ inputs.wasi_sdk_version }}.zip
               echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
               echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
           - name: "Create executable zip"
             run: |
-              pushd builddir/wasi
-              zip ${{ env.EXECUTABLE_FILE_NAME }} python.wasm
+              pushd zip-file
+              zip -r ${{ env.EXECUTABLE_FILE_NAME }} *
               popd
-              zip --update -r builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} Lib/
           - name: "Create build artifact zip"
             run: |
               pushd builddir/wasi
@@ -89,6 +98,6 @@ jobs:
           - name: "Create draft release"
             run: |
               gh release create v${{ inputs.python_version }} --title "CPython ${{ inputs.python_version}} w/ WASI SDK ${{ inputs.wasi_sdk_version}}" --repo "brettcannon/cpython-wasi-build" --draft
-              gh release upload v${{ inputs.python_version }} builddir/wasi/${{ env.EXECUTABLE_FILE_NAME }} builddir/wasi/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
+              gh release upload v${{ inputs.python_version }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} builddir/wasi/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
             env:
               GH_TOKEN: ${{ github.token }}
