@@ -65,7 +65,11 @@ jobs:
           - name: "Copy python.wasm"
             run: cp builddir/wasi/python.wasm zip-file
           - name: "Copy stdlib"
-            run: cp -r Lib/* ${{ env.ZIP_LIB_DIR }}
+            # Adding lib-dynload to silence the error message:
+            # "Could not find platform dependent libraries <exec_prefix>".
+            run: |
+              cp -r Lib/* ${{ env.ZIP_LIB_DIR }}
+              mkdir ${{ env.ZIP_LIB_DIR }}/lib-dynload
           - name: "Strip stdlib"
             # Based on preexisting practice; could probably strip out more.
             run: |
