@@ -33,7 +33,7 @@ jobs:
             # wasmtime version hard-coded due to https://github.com/bytecodealliance/wasmtime/issues/6107 .
             # Also doesn't really matter as it exists just to make `wasm_build.py` happy.
             run: |
-              curl https://wasmtime.dev/install.sh -sSf | bash -s -- --version 7.0.0
+              curl https://wasmtime.dev/install.sh -sSf | bash
               echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
               $HOME/.wasmtime/bin/wasmtime --version
           - name: "Install build dependencies"
