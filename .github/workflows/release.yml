@@ -30,11 +30,12 @@ jobs:
               tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
               $WASI_SDK_PATH/bin/clang --version
           - name: "Install wasmtime"
+            # wasmtime version hard-coded due to https://github.com/bytecodealliance/wasmtime/issues/6107 .
+            # Also doesn't really matter as it exists just to make `wasm_build.py` happy.
             run: |
-              curl https://wasmtime.dev/install.sh -sSf | bash
-              mkdir --parents $HOME/.local/bin
-              ln -s $HOME/.wasmtime/bin/wasmtime $HOME/.local/bin/
-              wasmtime --version
+              curl https://wasmtime.dev/install.sh -sSf | bash -s -- --version 7.0.0
+              echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
+              $HOME/.wasmtime/bin/wasmtime --version
           - name: "Install build dependencies"
             # https://devguide.python.org/getting-started/setup-building/#linux
             # Removed: gdb lcov libncurses5-dev libreadline6-dev tk-dev
