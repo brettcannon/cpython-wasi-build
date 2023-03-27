@@ -56,8 +56,9 @@ jobs:
           - name: "Build"
             run: python3 Tools/wasm/wasm_build.py wasi build
           - name: "Create lib directory"
+            shell: bash
             run: |
-              export PYTHON_BIN_NAME=`builddir/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"
+              export PYTHON_BIN_NAME=`builddir/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"`
               export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
               mkdir --parents $ZIP_LIB_DIR
               echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
