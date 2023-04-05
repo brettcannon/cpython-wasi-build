@@ -11,7 +11,7 @@ on:
                 description: "Version of CPython to build"
             wasi_sdk_version:
                 required: true
-                default: 19
+                default: 20
                 type: number
                 description: "WASI SDK version"
 
