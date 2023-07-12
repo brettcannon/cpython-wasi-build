@@ -14,6 +14,11 @@ on:
                 default: 20
                 type: number
                 description: "WASI SDK version"
+            threads:
+                required: true
+                default: true
+                type: boolean
+                description: "Build threaded version?"
 
 permissions:
   contents: write
@@ -119,6 +124,7 @@ jobs:
             GH_TOKEN: ${{ github.token }}
 
     threads-build:
+      if: ${{ inputs.threads }}
       needs: draft-release
       name: "Build threaded CPython ${{ inputs.python_version }} using WASI SDK ${{ inputs.wasi_sdk_version }}"
       runs-on: ubuntu-latest
