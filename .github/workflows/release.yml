@@ -26,6 +26,8 @@ jobs:
         - name: "Create draft release"
           run: |
             gh release create v${{ inputs.python_version }} --title "CPython ${{ inputs.python_version}} w/ WASI SDK ${{ inputs.wasi_sdk_version}}" --repo "brettcannon/cpython-wasi-build" --draft
+          env:
+            GH_TOKEN: ${{ github.token }}
 
     build:
       needs: draft-release
