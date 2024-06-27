@@ -11,7 +11,7 @@ on:
                 description: "Version of CPython to build"
             wasi_sdk_version:
                 required: true
-                default: 20
+                default: 21
                 type: number
                 description: "WASI SDK version"
             threads:
@@ -61,11 +61,11 @@ jobs:
             liblzma-dev libsqlite3-dev libssl-dev \
             lzma lzma-dev uuid-dev zlib1g-dev
         - name: "Install Python"
-          uses: actions/setup-python@v4
+          uses: actions/setup-python@v5
           with:
             python-version: "3.x"
         - name: "Checkout CPython"
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             repository: "python/cpython"
             ref: "v${{ inputs.python_version }}"
@@ -151,11 +151,11 @@ jobs:
             liblzma-dev libsqlite3-dev libssl-dev \
             lzma lzma-dev uuid-dev zlib1g-dev
         - name: "Install Python"
-          uses: actions/setup-python@v4
+          uses: actions/setup-python@v5
           with:
             python-version: "3.x"
         - name: "Checkout CPython"
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
           with:
             repository: "python/cpython"
             ref: "v${{ inputs.python_version }}"
