@@ -42,7 +42,7 @@ jobs:
         - name: "Install WASI SDK ${{ inputs.wasi_sdk_version }}"
           run: |
             mkdir ${{ env.WASI_SDK_PATH }} && \
-            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ inputs.wasi_sdk_version }}/wasi-sdk-${{ inputs.wasi_sdk_version }}-x86_64-linux.tar.gz | \
+            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ inputs.wasi_sdk_version }}/wasi-sdk-${{ inputs.wasi_sdk_version }}.0-x86_64-linux.tar.gz | \
             tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
             $WASI_SDK_PATH/bin/clang --version
         - name: "Install wasmtime"
