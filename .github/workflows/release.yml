@@ -22,7 +22,7 @@ jobs:
       steps:
         - name: "Create draft release"
           run: |
-            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} --title "CPython ${{ env.PYTHON.MAJOR_MINOR }}.${{ inputs.python_micro}} w/ WASI SDK ${{ env.WASI_SDK_VERSION }}" --repo "brettcannon/cpython-wasi-build" --draft
+            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro}} w/ WASI SDK ${{ env.WASI_SDK_VERSION }}" --repo "brettcannon/cpython-wasi-build" --draft
           env:
             GH_TOKEN: ${{ github.token }}
 
