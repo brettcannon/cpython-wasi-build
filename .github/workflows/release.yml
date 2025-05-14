@@ -97,7 +97,7 @@ jobs:
             popd
         - name: "Create build artifact zip"
           run: |
-            pushd cross-build/${{ TARGET_TRIPLE }}
+            pushd cross-build/${{ env.TARGET_TRIPLE }}
             zip ${{ env.BUILD_ARTIFACTS_FILE_NAME }} \
               config.log config.cache Makefile pyconfig.h libpython*.a \
               Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
