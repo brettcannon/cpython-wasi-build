@@ -4,8 +4,7 @@ env:
   WASI_SDK_PATH: "/opt/wasi-sdk"
   WASI_SDK_VERSION: "24"
   PYTHON_MAJOR_MINOR: "3.14"
-  WASM_BITNESS: "32"
-  WASI_VERSION: "p1"
+  TARGET_TRIPLE: "wasm32-wasip1"
 
 on:
     workflow_dispatch:
@@ -68,10 +67,7 @@ jobs:
             mkdir --parents $ZIP_LIB_DIR
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
         - name: "Copy python.wasm"
-          run: |
-            export WASI_BUILD_DIR=cross-build/wasm${{ env.WASM_BITNESS }}-wasi{{ env.WASI_VERSION }}
-            echo "WASI_BUILD_DIR=$WASI_BUILD_DIR" >> $GITHUB_ENV
-            cp  $WASI_BUILD_DIR/python.wasm zip-file
+          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm zip-file
         - name: "Copy stdlib"
           # Adding lib-dynload to silence the error message:
           # "Could not find platform dependent libraries <exec_prefix>".
@@ -88,7 +84,7 @@ jobs:
             find -name __pycache__ | xargs rm -rf
             popd
         - name: "Copy over _sysconfigdata_*.py"
-          run: cp ${{ env.WASI_BUILD_DIR }}/build/lib.wasi-wasm${{ env.WASM_BITNESS }}-*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
+          run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
         - name: "Calculate zip file names"
           run: |
             export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}-wasi_sdk-${{ env.WASI_SDK_VERSION }}.zip
@@ -101,7 +97,7 @@ jobs:
             popd
         - name: "Create build artifact zip"
           run: |
-            pushd ${{ env.WASI_BUILD_DIR }}
+            pushd cross-build/${{ TARGET_TRIPLE }}
             zip ${{ env.BUILD_ARTIFACTS_FILE_NAME }} \
               config.log config.cache Makefile pyconfig.h libpython*.a \
               Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
@@ -111,6 +107,6 @@ jobs:
             popd
         - name: "Attach files to the release"
           run: |
-            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} ${{ env.WASI_BUILD_DIR }}/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
+            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} cross-build/${{ env.TARGET_TRIPLE }}/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
           env:
             GH_TOKEN: ${{ github.token }}
