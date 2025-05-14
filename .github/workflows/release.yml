@@ -1,9 +1,11 @@
 name: "Create release"
 
 env:
-  WASI_SDK_PATH: /opt/wasi-sdk
+  WASI_SDK_PATH: "/opt/wasi-sdk"
   WASI_SDK_VERSION: "24"
   PYTHON_MAJOR_MINOR: "3.15"
+  WASM_BITNESS: "32"
+  WASI_VERSION: "p1"
 
 on:
     workflow_dispatch:
@@ -57,16 +59,19 @@ jobs:
             repository: "python/cpython"
             ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
         - name: "Build"
-          run: python3 Tools/wasm/wasm_build.py wasi build
+          run: python3 Tools/wasm/wasi.py build
         - name: "Create lib directory"
           shell: bash
           run: |
-            export PYTHON_BIN_NAME=`builddir/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"`
+            export PYTHON_BIN_NAME=`cross-build/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"`
             export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
             mkdir --parents $ZIP_LIB_DIR
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
         - name: "Copy python.wasm"
-          run: cp builddir/wasi/python.wasm zip-file
+          run: |
+            export WASI_BUILD_DIR=cross-build/wasm${{ env.WASM_BITNESS }}-wasi{{ env.WASI_VERSION }}
+            echo "WASI_BUILD_DIR=$WASI_BUILD_DIR" >> $GITHUB_ENV
+            cp  $WASI_BUILD_DIR/python.wasm zip-file
         - name: "Copy stdlib"
           # Adding lib-dynload to silence the error message:
           # "Could not find platform dependent libraries <exec_prefix>".
@@ -83,7 +88,7 @@ jobs:
             find -name __pycache__ | xargs rm -rf
             popd
         - name: "Copy over _sysconfigdata_*.py"
-          run: cp builddir/wasi/build/lib.wasi-wasm32-*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
+          run: cp ${{ env.WASI_BUILD_DIR }}/build/lib.wasi-wasm${{ env.WASM_BITNESS }}-*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
         - name: "Calculate zip file names"
           run: |
             export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}-wasi_sdk-${{ env.WASI_SDK_VERSION }}.zip
@@ -96,7 +101,7 @@ jobs:
             popd
         - name: "Create build artifact zip"
           run: |
-            pushd builddir/wasi
+            pushd ${{ env.WASI_BUILD_DIR }}
             zip ${{ env.BUILD_ARTIFACTS_FILE_NAME }} \
               config.log config.cache Makefile pyconfig.h libpython*.a \
               Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
@@ -106,6 +111,6 @@ jobs:
             popd
         - name: "Attach files to the release"
           run: |
-            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} builddir/wasi/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
+            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} ${{ env.WASI_BUILD_DIR }}/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
           env:
             GH_TOKEN: ${{ github.token }}
