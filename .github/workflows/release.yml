@@ -102,6 +102,7 @@ jobs:
               config.log config.cache Makefile pyconfig.h libpython*.a \
               Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
               Modules/_decimal/libmpdec/libmpdec.a \
+              Modules/_hacl/*.a \
               Modules/expat/libexpat.a \
               Programs/python.o
             popd
