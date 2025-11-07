@@ -2,7 +2,6 @@ name: "Test `main`"
 
 env:
   WASI_SDK_PATH: /opt/wasi-sdk
-  WASI_SDK_VERSION: "20"
   WASMTIME_VERSION: "14.x"
 
 on:
@@ -12,6 +11,12 @@ jobs:
     test-main:
       runs-on: ubuntu-latest
       steps:
+        - name: "Get WASI SDK version"
+          run: |
+            WASI_SDK_VERSION=$(gh api repos/python/cpython/contents/Tools/wasm/wasi/__main__.py \
+              --jq '.content' | base64 -d | \
+              grep '^WASI_SDK_VERSION = ' | cut -d= -f2 | tr -d ' ')
+            echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
         # TODO: cache installation somehow
         - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
           run: |
