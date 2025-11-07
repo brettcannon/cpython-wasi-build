@@ -2,7 +2,6 @@ name: "Create release"
 
 env:
   WASI_SDK_PATH: "/opt/wasi-sdk"
-  WASI_SDK_VERSION: "25"
   PYTHON_MAJOR_MINOR: "3.15"
   TARGET_TRIPLE: "wasm32-wasip1"
 
@@ -32,6 +31,12 @@ jobs:
       name: "Build CPython using the WASI SDK"
       runs-on: ubuntu-latest
       steps:
+        - name: "Get WASI SDK version"
+          run: |
+            WASI_SDK_VERSION=$(gh api repos/python/cpython/contents/Tools/wasm/wasi/__main__.py \
+              --jq '.content' | base64 -d | \
+              grep '^WASI_SDK_VERSION = ' | cut -d= -f2 | tr -d ' ')
+            echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
         - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
           run: |
             mkdir ${{ env.WASI_SDK_PATH }} && \
