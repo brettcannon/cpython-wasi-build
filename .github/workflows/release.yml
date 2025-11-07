@@ -33,9 +33,8 @@ jobs:
       steps:
         - name: "Get WASI SDK version"
           run: |
-            WASI_SDK_VERSION=$(gh api repos/python/cpython/contents/Tools/wasm/wasi/__main__.py \
-              --jq '.content' | base64 -d | \
-              grep '^WASI_SDK_VERSION = ' | cut -d= -f2 | tr -d ' ')
+            WASI_SDK_VERSION=$(curl -s https://raw.githubusercontent.com/python/cpython/main/Tools/wasm/wasi/__main__.py \
+              | grep '^WASI_SDK_VERSION = ' | cut -d= -f2 | tr -d ' ')
             echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
         - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
           run: |
