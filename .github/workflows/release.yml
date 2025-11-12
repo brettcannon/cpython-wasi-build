@@ -31,19 +31,6 @@ jobs:
       name: "Build CPython using the WASI SDK"
       runs-on: ubuntu-latest
       steps:
-        - name: "Get WASI SDK version"
-          run: |
-            WASI_SDK_VERSION=$(curl -s https://raw.githubusercontent.com/python/cpython/main/Tools/wasm/wasi/__main__.py \
-              | grep '^WASI_SDK_VERSION = ' | cut -d= -f2 | tr -d ' ')
-            echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
-        - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
-          run: |
-            mkdir ${{ env.WASI_SDK_PATH }} && \
-            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ env.WASI_SDK_VERSION }}/wasi-sdk-${{ env.WASI_SDK_VERSION }}.0-x86_64-linux.tar.gz | \
-            tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
-            $WASI_SDK_PATH/bin/clang --version
-        - name: "Install wasmtime"
-          uses: bytecodealliance/actions/wasmtime/setup@v1
         - name: "Install build dependencies"
           # https://devguide.python.org/getting-started/setup-building/#linux
           # Removed: gdb lcov libncurses5-dev libreadline6-dev tk-dev
@@ -61,6 +48,18 @@ jobs:
           with:
             repository: "python/cpython"
             ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+        - name: "Get WASI SDK version"
+          run: |
+            WASI_SDK_VERSION=$(grep '^WASI_SDK_VERSION = ' Tools/wasm/wasi/__main__.py | cut -d= -f2 | tr -d ' ')
+            echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
+        - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
+          run: |
+            mkdir ${{ env.WASI_SDK_PATH }} && \
+            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ env.WASI_SDK_VERSION }}/wasi-sdk-${{ env.WASI_SDK_VERSION }}.0-x86_64-linux.tar.gz | \
+            tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
+            $WASI_SDK_PATH/bin/clang --version
+        - name: "Install wasmtime"
+          uses: bytecodealliance/actions/wasmtime/setup@v1
         - name: "Build"
           run: python3 Tools/wasm/wasi build
         - name: "Create lib directory"
