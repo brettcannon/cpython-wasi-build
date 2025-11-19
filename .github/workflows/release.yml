@@ -16,18 +16,36 @@ permissions:
   contents: write
 
 jobs:
+    get-wasi-sdk-version:
+      name: "Get WASI SDK version"
+      runs-on: ubuntu-latest
+      outputs:
+        wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
+      steps:
+        - name: "Checkout the CPython v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} branch"
+          uses: actions/checkout@v4
+          with:
+            repository: "python/cpython"
+            ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+        - name: "Get WASI SDK version"
+          id: get-version
+          run: |
+            WASI_SDK_VERSION=$(grep '^WASI_SDK_VERSION = ' Tools/wasm/wasi/__main__.py | cut -d= -f2 | tr -d ' ')
+            echo "wasi_sdk_version=$WASI_SDK_VERSION" >> $GITHUB_OUTPUT
+
     draft-release:
       name: "Draft release"
+      needs: get-wasi-sdk-version
       runs-on: ubuntu-latest
       steps:
         - name: "Create draft release"
           run: |
-            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro}} w/ WASI SDK ${{ env.WASI_SDK_VERSION }}" --repo "brettcannon/cpython-wasi-build" --draft
+            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro}} w/ WASI SDK ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}" --repo "brettcannon/cpython-wasi-build" --draft
           env:
             GH_TOKEN: ${{ github.token }}
 
     build:
-      needs: draft-release
+      needs: [draft-release, get-wasi-sdk-version]
       name: "Build CPython using the WASI SDK"
       runs-on: ubuntu-latest
       steps:
@@ -48,14 +66,10 @@ jobs:
           with:
             repository: "python/cpython"
             ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
-        - name: "Get WASI SDK version"
-          run: |
-            WASI_SDK_VERSION=$(grep '^WASI_SDK_VERSION = ' Tools/wasm/wasi/__main__.py | cut -d= -f2 | tr -d ' ')
-            echo "WASI_SDK_VERSION=$WASI_SDK_VERSION" >> $GITHUB_ENV
-        - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
+        - name: "Install WASI SDK ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}"
           run: |
             mkdir ${{ env.WASI_SDK_PATH }} && \
-            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ env.WASI_SDK_VERSION }}/wasi-sdk-${{ env.WASI_SDK_VERSION }}.0-x86_64-linux.tar.gz | \
+            curl -s -S --location https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}/wasi-sdk-${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}.0-x86_64-linux.tar.gz | \
             tar --strip-components 1 --directory ${{ env.WASI_SDK_PATH }} --extract --gunzip
             $WASI_SDK_PATH/bin/clang --version
         - name: "Install wasmtime"
@@ -90,7 +104,7 @@ jobs:
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
         - name: "Calculate zip file names"
           run: |
-            export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}-wasi_sdk-${{ env.WASI_SDK_VERSION }}.zip
+            export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}-wasi_sdk-${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}.zip
             echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
             echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
         - name: "Create executable zip"
