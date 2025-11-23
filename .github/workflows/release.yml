@@ -2,7 +2,7 @@ name: "Create release"
 
 env:
   WASI_SDK_PATH: "/opt/wasi-sdk"
-  PYTHON_MAJOR_MINOR: "3.15"
+  PYTHON_MAJOR_MINOR: "3.14"
   TARGET_TRIPLE: "wasm32-wasip1"
 
 on:
