@@ -18,7 +18,7 @@ permissions:
 jobs:
     get-wasi-sdk-version:
       name: "Get WASI SDK version"
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-slim
       outputs:
         wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
       steps:
@@ -36,7 +36,7 @@ jobs:
     draft-release:
       name: "Draft release"
       needs: get-wasi-sdk-version
-      runs-on: ubuntu-latest
+      runs-on: ubuntu-slim
       steps:
         - name: "Create draft release"
           run: |
