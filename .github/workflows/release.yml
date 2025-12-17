@@ -2,7 +2,7 @@ name: "Create release"
 
 env:
   WASI_SDK_PATH: /opt/wasi-sdk
-  WASI_SDK_VERSION: "16"
+  WASI_SDK_VERSION: "21"
   PYTHON_MAJOR_MINOR: "3.11"
 
 on:
