@@ -90,7 +90,7 @@ jobs:
           shell: bash
           run: |
             set -e
-            export PYTHON_BIN_NAME=$(cross-build/build/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
+            export PYTHON_BIN_NAME=$(cross-build/*-linux-*/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
             export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
             mkdir --parents $ZIP_LIB_DIR
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
