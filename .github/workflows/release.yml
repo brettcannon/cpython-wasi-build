@@ -33,27 +33,10 @@ jobs:
             WASI_SDK_VERSION=$(grep '^WASI_SDK_VERSION = ' Tools/wasm/wasi/__main__.py | cut -d= -f2 | tr -d ' ')
             echo "wasi_sdk_version=$WASI_SDK_VERSION" >> $GITHUB_OUTPUT
 
-    draft-release:
-      name: "Draft release"
-      needs: get-wasi-sdk-version
-      runs-on: ubuntu-slim
-      permissions:
-        contents: write
-      steps:
-        - name: "Create draft release"
-          run: |
-            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" --repo "brettcannon/cpython-wasi-build" --draft
-          env:
-            GH_TOKEN: ${{ github.token }}
-            INPUTS_PYTHON_MICRO: ${{ inputs.python_micro}}
-            NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
-
     build:
-      needs: [draft-release, get-wasi-sdk-version]
+      needs: get-wasi-sdk-version
       name: "Build CPython using the WASI SDK"
       runs-on: ubuntu-latest
-      permissions:
-        contents: write
       steps:
         - name: "Install build dependencies"
           # https://devguide.python.org/getting-started/setup-building/#linux
@@ -113,6 +96,66 @@ jobs:
             popd
         - name: "Copy over _sysconfigdata_*.py"
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
+        - name: "Create executable zip"
+          run: |
+            pushd zip-file
+            zip -r python.zip *
+            popd
+        - name: "Create build artifact zip"
+          run: |
+            pushd cross-build/${{ env.TARGET_TRIPLE }}
+            zip build.zip \
+              config.log config.cache Makefile pyconfig.h libpython*.a \
+              Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
+              Modules/_decimal/libmpdec/libmpdec.a \
+              Modules/_hacl/*.a \
+              Modules/expat/libexpat.a \
+              Programs/python.o
+            popd
+        - name: "Upload executable zip"
+          uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+          with:
+            name: python
+            path: zip-file/python.zip
+            retention-days: 1
+        - name: "Upload build artifact zip"
+          uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+          with:
+            name: build
+            path: cross-build/${{ env.TARGET_TRIPLE }}/build.zip
+            retention-days: 1
+
+    test:
+      needs: build
+      name: "Test the build"
+      runs-on: ubuntu-slim
+      steps:
+        - name: "Install wasmtime"
+          uses: bytecodealliance/actions/wasmtime/setup@6aecabac1eb1dcf7ed94ba9471974415ee2ebef2 # v1.1.2
+        - name: "Download executable zip"
+          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+          with:
+            name: python
+        - name: "Extract executable zip"
+          run: unzip python.zip
+        - name: "Test"
+          run: wasmtime --dir . python.wasm -m sysconfig
+
+    release:
+      needs: [test, get-wasi-sdk-version]
+      name: "Create draft release"
+      runs-on: ubuntu-slim
+      permissions:
+        contents: write
+      steps:
+        - name: "Download executable zip"
+          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+          with:
+            name: python
+        - name: "Download build artifact zip"
+          uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+          with:
+            name: build
         - name: "Calculate zip file names"
           run: |
             export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO}-wasi_sdk-${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}.zip
@@ -121,25 +164,18 @@ jobs:
           env:
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
             NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
-        - name: "Create executable zip"
+        - name: "Rename zip files"
           run: |
-            pushd zip-file
-            zip -r ${EXECUTABLE_FILE_NAME} *
-            popd
-        - name: "Create build artifact zip"
+            mv python.zip ${EXECUTABLE_FILE_NAME}
+            mv build.zip ${BUILD_ARTIFACTS_FILE_NAME}
+        - name: "Create draft release"
           run: |
-            pushd cross-build/${{ env.TARGET_TRIPLE }}
-            zip ${BUILD_ARTIFACTS_FILE_NAME} \
-              config.log config.cache Makefile pyconfig.h libpython*.a \
-              Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
-              Modules/_decimal/libmpdec/libmpdec.a \
-              Modules/_hacl/*.a \
-              Modules/expat/libexpat.a \
-              Programs/python.o
-            popd
-        - name: "Attach files to the release"
-          run: |
-            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} zip-file/${EXECUTABLE_FILE_NAME} cross-build/${{ env.TARGET_TRIPLE }}/${BUILD_ARTIFACTS_FILE_NAME} --repo "brettcannon/cpython-wasi-build"
+            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} \
+              --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" \
+              --repo "brettcannon/cpython-wasi-build" \
+              --draft \
+              ${EXECUTABLE_FILE_NAME} ${BUILD_ARTIFACTS_FILE_NAME}
           env:
             GH_TOKEN: ${{ github.token }}
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
+            NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
