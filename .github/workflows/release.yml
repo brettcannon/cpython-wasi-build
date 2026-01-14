@@ -147,6 +147,9 @@ jobs:
       runs-on: ubuntu-slim
       permissions:
         contents: write
+      environment:
+        name: release
+        url: https://github.com/brettcannon/cpython-wasi-build/releases/tag/v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}
       steps:
         - name: "Download executable zip"
           uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
