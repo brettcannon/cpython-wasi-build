@@ -96,6 +96,8 @@ jobs:
             popd
         - name: "Copy over _sysconfigdata_*.py"
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
+        - name: "Copy LICENSE"
+          run: cp LICENSE zip-file/
         - name: "Create executable zip"
           run: |
             pushd zip-file
@@ -110,7 +112,8 @@ jobs:
               Modules/_decimal/libmpdec/libmpdec.a \
               Modules/_hacl/*.a \
               Modules/expat/libexpat.a \
-              Programs/python.o
+              Programs/python.o \
+              ../../LICENSE
             popd
         - name: "Upload executable zip"
           uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
