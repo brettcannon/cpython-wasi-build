@@ -73,12 +73,14 @@ jobs:
           shell: bash
           run: |
             set -e
+            export ZIP_FILE_DIR=zip-file
             export PYTHON_BIN_NAME=$(cross-build/*-linux-*/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')")
-            export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
+            export ZIP_LIB_DIR=$ZIP_FILE_DIR/lib/$PYTHON_BIN_NAME
             mkdir --parents $ZIP_LIB_DIR
+            echo "ZIP_FILE_DIR=$ZIP_FILE_DIR" >> $GITHUB_ENV
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
         - name: "Copy python.wasm"
-          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm zip-file
+          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm ${ZIP_FILE_DIR}
         - name: "Copy stdlib"
           # Adding lib-dynload to silence the error message:
           # "Could not find platform dependent libraries <exec_prefix>".
@@ -98,10 +100,12 @@ jobs:
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
         - name: "Copy LICENSE"
           # LICENSE file from CPython checkout (at workspace root)
-          run: cp LICENSE zip-file/
+          run: cp LICENSE ${ZIP_FILE_DIR}/
+        - name: "Copy LICENSE to build directory"
+          run: cp LICENSE cross-build/${{ env.TARGET_TRIPLE }}/
         - name: "Create executable zip"
           run: |
-            pushd zip-file
+            pushd ${ZIP_FILE_DIR}
             zip -r python.zip *
             popd
         - name: "Create build artifact zip"
@@ -114,7 +118,7 @@ jobs:
               Modules/_hacl/*.a \
               Modules/expat/libexpat.a \
               Programs/python.o \
-              ../../LICENSE
+              LICENSE
             popd
         - name: "Upload executable zip"
           uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
