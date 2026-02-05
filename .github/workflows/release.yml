@@ -80,7 +80,7 @@ jobs:
             echo "ZIP_FILE_DIR=$ZIP_FILE_DIR" >> $GITHUB_ENV
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
         - name: "Copy python.wasm"
-          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm ${ZIP_FILE_DIR}
+          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm ${{ env.ZIP_FILE_DIR }}
         - name: "Copy stdlib"
           # Adding lib-dynload to silence the error message:
           # "Could not find platform dependent libraries <exec_prefix>".
@@ -100,12 +100,12 @@ jobs:
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
         - name: "Copy LICENSE"
           # LICENSE file from CPython checkout (at workspace root)
-          run: cp LICENSE ${ZIP_FILE_DIR}/
+          run: cp LICENSE ${{ env.ZIP_FILE_DIR }}/
         - name: "Copy LICENSE to build directory"
           run: cp LICENSE cross-build/${{ env.TARGET_TRIPLE }}/
         - name: "Create executable zip"
           run: |
-            pushd ${ZIP_FILE_DIR}
+            pushd ${{ env.ZIP_FILE_DIR }}
             zip -r python.zip *
             popd
         - name: "Create build artifact zip"
