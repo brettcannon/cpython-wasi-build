@@ -31,6 +31,8 @@ jobs:
       needs: draft-release
       name: "Build CPython using the WASI SDK"
       runs-on: ubuntu-latest
+      env:
+        ZIP_DIR: "zip-file"
       steps:
         - name: "Install WASI SDK ${{ env.WASI_SDK_VERSION }}"
           run: |
@@ -63,11 +65,11 @@ jobs:
           shell: bash
           run: |
             export PYTHON_BIN_NAME=`cross-build/*-linux-*/python -c "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"`
-            export ZIP_LIB_DIR=zip-file/lib/$PYTHON_BIN_NAME
+            export ZIP_LIB_DIR=${{ env.ZIP_DIR }}/lib/$PYTHON_BIN_NAME
             mkdir --parents $ZIP_LIB_DIR
             echo "ZIP_LIB_DIR=$ZIP_LIB_DIR" >> $GITHUB_ENV
         - name: "Copy python.wasm"
-          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm zip-file
+          run: cp  cross-build/${{ env.TARGET_TRIPLE }}/python.wasm ${{ env.ZIP_DIR }}
         - name: "Copy stdlib"
           # Adding lib-dynload to silence the error message:
           # "Could not find platform dependent libraries <exec_prefix>".
@@ -85,6 +87,8 @@ jobs:
             popd
         - name: "Copy over _sysconfigdata_*.py"
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
+        - name: "Copy LICENSE"
+          run: cp LICENSE ${{ env.ZIP_DIR }}/
         - name: "Calculate zip file names"
           run: |
             export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}-wasi_sdk-${{ env.WASI_SDK_VERSION }}.zip
@@ -92,13 +96,15 @@ jobs:
             echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
         - name: "Create executable zip"
           run: |
-            pushd zip-file
+            pushd ${{ env.ZIP_DIR }}
             zip -r ${{ env.EXECUTABLE_FILE_NAME }} *
             popd
         - name: "Create build artifact zip"
           run: |
+            cp LICENSE cross-build/${{ env.TARGET_TRIPLE }}/
             pushd cross-build/${{ env.TARGET_TRIPLE }}
             zip ${{ env.BUILD_ARTIFACTS_FILE_NAME }} \
+              LICENSE \
               config.log config.cache Makefile pyconfig.h libpython*.a \
               Modules/Setup.local Modules/Setup.stdlib Modules/config.c \
               Modules/_decimal/libmpdec/libmpdec.a \
@@ -108,6 +114,6 @@ jobs:
             popd
         - name: "Attach files to the release"
           run: |
-            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} zip-file/${{ env.EXECUTABLE_FILE_NAME }} cross-build/${{ env.TARGET_TRIPLE }}/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
+            gh release upload v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} ${{ env.ZIP_DIR }}/${{ env.EXECUTABLE_FILE_NAME }} cross-build/${{ env.TARGET_TRIPLE }}/${{ env.BUILD_ARTIFACTS_FILE_NAME }} --repo "brettcannon/cpython-wasi-build"
           env:
             GH_TOKEN: ${{ github.token }}
