@@ -97,6 +97,7 @@ jobs:
         - name: "Copy over _sysconfigdata_*.py"
           run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
         - name: "Copy LICENSE"
+          # LICENSE file from CPython checkout (at workspace root)
           run: cp LICENSE zip-file/
         - name: "Create executable zip"
           run: |
