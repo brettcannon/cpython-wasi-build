@@ -97,7 +97,7 @@ jobs:
             find -name __pycache__ | xargs rm -rf
             popd
         - name: "Copy over _sysconfigdata_*.py"
-          run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${ZIP_LIB_DIR}
+          run: cp cross-build/${{ env.TARGET_TRIPLE }}/build/lib.*/_sysconfigdata_*.py ${{ env.ZIP_LIB_DIR }}
         - name: "Copy LICENSE"
           # LICENSE file from CPython checkout (at workspace root)
           run: cp LICENSE ${{ env.ZIP_FILE_DIR }}/
