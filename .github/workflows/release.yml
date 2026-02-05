@@ -107,7 +107,6 @@ jobs:
             popd
         - name: "Create build artifact zip"
           run: |
-            cp LICENSE cross-build/${{ env.TARGET_TRIPLE }}/
             pushd cross-build/${{ env.TARGET_TRIPLE }}
             zip build.zip \
               config.log config.cache Makefile pyconfig.h libpython*.a \
@@ -116,7 +115,7 @@ jobs:
               Modules/_hacl/*.a \
               Modules/expat/libexpat.a \
               Programs/python.o \
-              LICENSE
+              ../../LICENSE
             popd
         - name: "Upload executable zip"
           uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
