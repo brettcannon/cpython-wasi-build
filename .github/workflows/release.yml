@@ -181,10 +181,11 @@ jobs:
             name: build
         - name: "Calculate zip file names"
           run: |
-            export ZIP_FILE_NAME=python-${{ inputs.python_major_minor }}.${INPUTS_PYTHON_MICRO}-wasi_sdk-${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}.zip
+            export ZIP_FILE_NAME=python-${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO}-wasi_sdk-${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}.zip
             echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
             echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
           env:
+            INPUTS_PYTHON_MAJOR_MINOR: ${{ inputs.python_major_minor }}
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
             NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
         - name: "Rename zip files"
@@ -193,12 +194,13 @@ jobs:
             mv build.zip ${BUILD_ARTIFACTS_FILE_NAME}
         - name: "Create draft release"
           run: |
-            gh release create v${{ inputs.python_major_minor }}.${INPUTS_PYTHON_MICRO} \
-              --title "CPython ${{ inputs.python_major_minor }}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" \
+            gh release create v${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO} \
+              --title "CPython ${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" \
               --repo "brettcannon/cpython-wasi-build" \
               --draft \
               ${EXECUTABLE_FILE_NAME} ${BUILD_ARTIFACTS_FILE_NAME}
           env:
             GH_TOKEN: ${{ github.token }}
+            INPUTS_PYTHON_MAJOR_MINOR: ${{ inputs.python_major_minor }}
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
             NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
