@@ -1,14 +1,17 @@
 name: "Create release"
-run-name: "Release Python ${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+run-name: "Release Python ${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
 
 env:
   WASI_SDK_PATH: "/opt/wasi-sdk"
-  PYTHON_MAJOR_MINOR: "3.15"
   TARGET_TRIPLE: "wasm32-wasip1"
 
 on:
     workflow_dispatch:
         inputs:
+            python_major_minor:
+                required: true
+                default: "3.15"
+                description: "Major.minor version of CPython to build"
             python_micro:
                 required: true
                 description: "Micro version + release level of CPython to build"
@@ -22,11 +25,11 @@ jobs:
       outputs:
         wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
       steps:
-        - name: "Checkout the CPython v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} branch"
+        - name: "Checkout the CPython v${{ inputs.python_major_minor }}.${{ inputs.python_micro }} branch"
           uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
           with:
             repository: "python/cpython"
-            ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+            ref: "v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
             persist-credentials: false
         - name: "Install Python"
           uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
@@ -64,11 +67,11 @@ jobs:
           uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
           with:
             python-version: "3.x"
-        - name: "Checkout the CPython v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} branch"
+        - name: "Checkout the CPython v${{ inputs.python_major_minor }}.${{ inputs.python_micro }} branch"
           uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
           with:
             repository: "python/cpython"
-            ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+            ref: "v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
             persist-credentials: false
         - name: "Install WASI SDK ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}"
           run: |
@@ -166,7 +169,7 @@ jobs:
         contents: write
       environment:
         name: release
-        url: https://github.com/brettcannon/cpython-wasi-build/releases/tag/v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}
+        url: https://github.com/brettcannon/cpython-wasi-build/releases/tag/v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}
       steps:
         - name: "Download executable zip"
           uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
@@ -178,10 +181,11 @@ jobs:
             name: build
         - name: "Calculate zip file names"
           run: |
-            export ZIP_FILE_NAME=python-${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO}-wasi_sdk-${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}.zip
+            export ZIP_FILE_NAME=python-${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO}-wasi_sdk-${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}.zip
             echo "EXECUTABLE_FILE_NAME=$ZIP_FILE_NAME" >> $GITHUB_ENV
             echo "BUILD_ARTIFACTS_FILE_NAME=_build-$ZIP_FILE_NAME" >> $GITHUB_ENV
           env:
+            INPUTS_PYTHON_MAJOR_MINOR: ${{ inputs.python_major_minor }}
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
             NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
         - name: "Rename zip files"
@@ -190,12 +194,13 @@ jobs:
             mv build.zip ${BUILD_ARTIFACTS_FILE_NAME}
         - name: "Create draft release"
           run: |
-            gh release create v${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} \
-              --title "CPython ${{ env.PYTHON_MAJOR_MINOR }}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" \
+            gh release create v${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO} \
+              --title "CPython ${INPUTS_PYTHON_MAJOR_MINOR}.${INPUTS_PYTHON_MICRO} w/ WASI SDK ${NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION}" \
               --repo "brettcannon/cpython-wasi-build" \
               --draft \
               ${EXECUTABLE_FILE_NAME} ${BUILD_ARTIFACTS_FILE_NAME}
           env:
             GH_TOKEN: ${{ github.token }}
+            INPUTS_PYTHON_MAJOR_MINOR: ${{ inputs.python_major_minor }}
             INPUTS_PYTHON_MICRO: ${{ inputs.python_micro }}
             NEEDS_GET_WASI_SDK_VERSION_OUTPUTS_WASI_SDK_VERSION: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
