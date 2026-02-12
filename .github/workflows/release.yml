@@ -19,7 +19,7 @@ jobs:
       name: "Get WASI SDK version"
       runs-on: ubuntu-slim
       outputs:
-        wasi_sdk_version: ${{ steps.get-version.outputs.version }}
+        wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
       steps:
         - name: "Checkout the CPython v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} branch"
           uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -41,7 +41,7 @@ jobs:
             config = tomllib.loads(Path("Platforms/WASI/config.toml").read_text())
             version = config["targets"]["wasi-sdk"]
             with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                f.write(f"version={version}\n")
+                f.write(f"wasi_sdk_version={version}\n")
 
     build:
       needs: get-wasi-sdk-version
