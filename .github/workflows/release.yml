@@ -1,5 +1,5 @@
 name: "Create release"
-run-name: "Release Python ${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
+run-name: "Release Python 3.15.${{ inputs.python_micro }}"
 
 env:
   WASI_SDK_PATH: "/opt/wasi-sdk"
