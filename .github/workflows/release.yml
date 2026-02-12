@@ -19,7 +19,7 @@ jobs:
       name: "Get WASI SDK version"
       runs-on: ubuntu-slim
       outputs:
-        wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
+        wasi_sdk_version: ${{ steps.get-version.outputs.version }}
       steps:
         - name: "Checkout the CPython v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }} branch"
           uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -27,11 +27,21 @@ jobs:
             repository: "python/cpython"
             ref: "v${{ env.PYTHON_MAJOR_MINOR }}.${{ inputs.python_micro }}"
             persist-credentials: false
+        - name: "Install Python"
+          uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+          with:
+            python-version: "3.x"
         - name: "Get WASI SDK version"
           id: get-version
+          shell: python
           run: |
-            WASI_SDK_VERSION=$(grep '^WASI_SDK_VERSION = ' Tools/wasm/wasi/__main__.py | cut -d= -f2 | tr -d ' ')
-            echo "wasi_sdk_version=$WASI_SDK_VERSION" >> $GITHUB_OUTPUT
+            import tomllib
+            from pathlib import Path
+            import os
+            config = tomllib.loads(Path("Platforms/WASI/config.toml").read_text())
+            version = config["targets"]["wasi-sdk"]
+            with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                f.write(f"version={version}\n")
 
     build:
       needs: get-wasi-sdk-version
