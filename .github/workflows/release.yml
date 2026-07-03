@@ -25,7 +25,7 @@ jobs:
         wasi_sdk_version: ${{ steps.get-version.outputs.wasi_sdk_version }}
       steps:
         - name: "Checkout the CPython v${{ inputs.python_major_minor }}.${{ inputs.python_micro }} branch"
-          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+          uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
           with:
             repository: "python/cpython"
             ref: "v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
@@ -67,7 +67,7 @@ jobs:
           with:
             python-version: "3.x"
         - name: "Checkout the CPython v${{ inputs.python_major_minor }}.${{ inputs.python_micro }} branch"
-          uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+          uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
           with:
             repository: "python/cpython"
             ref: "v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
