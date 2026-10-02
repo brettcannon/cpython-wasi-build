@@ -31,7 +31,7 @@ jobs:
             ref: "v${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
             persist-credentials: false
         - name: "Install Python"
-          uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+          uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
           with:
             python-version: "3.x"
         - name: "Get WASI SDK version"
@@ -63,7 +63,7 @@ jobs:
             liblzma-dev libsqlite3-dev libssl-dev \
             lzma lzma-dev uuid-dev zlib1g-dev
         - name: "Install Python"
-          uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
+          uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
           with:
             python-version: "3.x"
         - name: "Checkout the CPython v${{ inputs.python_major_minor }}.${{ inputs.python_micro }} branch"
@@ -74,7 +74,7 @@ jobs:
             persist-credentials: false
         - name: "Install WASI SDK ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}"
           id: install-wasi-sdk
-          uses: bytecodealliance/setup-wasi-sdk-action@b2de090b44eb70013ee96b393727d473b35e1728
+          uses: bytecodealliance/setup-wasi-sdk-action@77d09f3df1e8da344d8403cf8631af8977938b4c
           with:
             version: ${{ needs.get-wasi-sdk-version.outputs.wasi_sdk_version }}
             add-to-path: false
