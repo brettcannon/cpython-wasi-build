@@ -9,7 +9,7 @@ on:
         inputs:
             python_major_minor:
                 required: true
-                default: "3.15"
+                default: "3.16"
                 description: "Major.minor version of CPython to build"
             python_micro:
                 required: true
