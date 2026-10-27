@@ -29,7 +29,7 @@ jobs:
 
     build:
       needs: draft-release
-      name: "Build CPython using the WASI SDK"
+      name: "Build CPython 3.14 using the WASI SDK"
       runs-on: ubuntu-latest
       env:
         ZIP_DIR: "zip-file"
@@ -50,7 +50,7 @@ jobs:
             sudo apt-get install build-essential pkg-config \
             libbz2-dev libffi-dev libgdbm-dev libgdbm-compat-dev \
             liblzma-dev libsqlite3-dev libssl-dev \
-            lzma lzma-dev uuid-dev zlib1g-dev
+            lzma uuid-dev zlib1g-dev
         - name: "Install Python"
           uses: actions/setup-python@v5
           with:
