@@ -83,11 +83,9 @@ jobs:
         - name: "Install wasmtime"
           uses: bytecodealliance/actions/wasmtime/setup@9152e710e9f7182e4c29ad218e4f335a7b203613 # v1.1.3
         - name: "Build"
-          run: python3 Platforms/WASI build
+          run: python3 Platforms/WASI release
           env:
             WASI_SDK_PATH: ${{ steps.install-wasi-sdk.outputs.wasi-sdk-path }}
-        - name: "Package"
-          run: python3 Platforms/WASI package
         - name: "Upload artifact"
           id: upload
           uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
