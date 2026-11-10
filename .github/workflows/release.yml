@@ -2,7 +2,7 @@ name: "Create release"
 run-name: "Release Python ${{ inputs.python_major_minor }}.${{ inputs.python_micro }}"
 
 env:
-  TARGET_TRIPLE: "wasm32-wasip1"
+  TARGET_TRIPLE: "wasm32-wasip3"
 
 on:
     workflow_dispatch:
@@ -114,7 +114,7 @@ jobs:
 
     old-build:
       needs: get-wasi-sdk-version
-      name: "Build CPython using the WASI SDK"
+      name: "Build CPython using the WASI SDK 🧓"
       runs-on: ubuntu-latest
       env:
         ZIP_DIR: "zip-file"
